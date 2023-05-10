@@ -1,7 +1,6 @@
 package com.ftp;
 
 import java.awt.*;
-import java.awt.color.ProfileDataException;
 import java.awt.event.*;
 import java.io.IOException;
 
@@ -10,6 +9,9 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.*;
 
+import org.apache.commons.net.ftp.FTPClient;
+
+import com.connection.Connection;
 import com.files.FTPFileTree;
 import com.files.LocalFileTree;
 
@@ -28,11 +30,14 @@ public class FTPClientGUI extends JFrame {
     private JTree serverTree;
     private JButton downloadButton;
     private JButton uploadButton;
+    private JTextArea output;
+    
+    private FTPClient ftpClient;
 
     public FTPClientGUI() throws IOException {
         // Initialize the components
         hostLabel = new JLabel("FTP Host:");
-        hostField = new JTextField("localhost");
+        hostField = new JTextField("192.168.1.52");
         portLabel = new JLabel("FTP Port: ");
         portField = new JTextField("2121");
         userLabel = new JLabel("Username:");
@@ -43,6 +48,7 @@ public class FTPClientGUI extends JFrame {
         disconnectButton = new JButton("Disconnect");
         downloadButton = new JButton("Download");
         uploadButton = new JButton("Upload");
+        output = new JTextArea();
 
         // Create the local file system tree
         DefaultMutableTreeNode localRoot = new LocalFileTree().getRoot();
@@ -51,9 +57,16 @@ public class FTPClientGUI extends JFrame {
         localTree.setRootVisible(false);
         JScrollPane localScrollPane = new JScrollPane(localTree);
         localScrollPane.setBorder(BorderFactory.createTitledBorder("Local Files"));
-        
+
         // Create the remote file system tree
-        final FTPFileTree ftpFileTree = new FTPFileTree("192.168.1.52", 2121, "pedro", "1234",1);
+        String host = hostField.getText();
+        String user = userField.getText();
+        Integer port = Integer.parseInt(portField.getText());
+        String password = String.valueOf(passwordField.getPassword());
+
+        ftpClient = Connection.Connect(host, port, user, password);
+
+        final FTPFileTree ftpFileTree = new FTPFileTree(host, ftpClient, 1);
         DefaultMutableTreeNode serverRoot = ftpFileTree.getRoot();
         DefaultTreeModel serverModel = new DefaultTreeModel(serverRoot);
         serverTree = new JTree(serverModel);
@@ -65,7 +78,7 @@ public class FTPClientGUI extends JFrame {
             @Override
             public void treeExpanded(TreeExpansionEvent event) {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
-        
+
                 try {
                     ftpFileTree.loadChildren(node, 0);
                     ((DefaultTreeModel) serverTree.getModel()).reload(node);
@@ -153,8 +166,14 @@ public class FTPClientGUI extends JFrame {
         c.gridy = 6;
         add(uploadButton, c);
         
-        //add listener to connect button
-        connectButton.addActionListener(new ActionListener(){
+        c.gridx = 0;
+        c.gridy = 7;
+        c.gridwidth = 3;
+        c.gridheight = 4;
+        add(output, c);
+
+        // add listener to connect button
+        connectButton.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent arg0) {
@@ -162,15 +181,31 @@ public class FTPClientGUI extends JFrame {
                 String user = userField.getText();
                 Integer port = Integer.parseInt(portField.getText());
                 String password = String.valueOf(passwordField.getPassword());
-                           
+                if(ftpClient.isConnected()){
+                    System.out.println("Server already connected");
+                } else{
+                    ftpClient = Connection.Connect(host, port, user, password);
+                }
             }
 
+        });
+
+        disconnectButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent arg0) {
+                try {
+                    ftpClient.disconnect();
+                    System.out.println("Disconneted from server.");
+                } catch (IOException e) {
+                    System.out.println("Disconnect failed.");
+                }
+            }
         });
 
         // Set the frame properties
         // Set the frame properties
         setTitle("FTP Client");
-        setSize(800, 600);
+        setSize(1000, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
