@@ -52,7 +52,7 @@ public class FTPClientGUI extends JFrame {
         localScrollPane.setBorder(BorderFactory.createTitledBorder("Local Files"));
         
         // Create the remote file system tree
-        final FTPFileTree ftpFileTree = new FTPFileTree("localhost", 2121, "pedro", "1234",1);
+        final FTPFileTree ftpFileTree = new FTPFileTree("192.168.1.52", 2121, "pedro", "1234",1);
         DefaultMutableTreeNode serverRoot = ftpFileTree.getRoot();
         DefaultTreeModel serverModel = new DefaultTreeModel(serverRoot);
         serverTree = new JTree(serverModel);

@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Enumeration;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -17,7 +16,6 @@ public class FTPFileTree {
     public FTPFileTree(String server, int port, String username, String password, int maxDepth) throws IOException {
         root = new DefaultMutableTreeNode(server);
 
-        DefaultTreeModel model = new DefaultTreeModel(root);
 
         ftpClient = new FTPClient();
         ftpClient.connect(server, port);
@@ -64,18 +62,7 @@ public class FTPFileTree {
         return path.toString();
     }
 
-    private boolean isDirectory(String name) throws IOException {
-        boolean isDirectory = false;
-        String originalWorkingDirectory = ftpClient.printWorkingDirectory();
-        String path = getPath(new DefaultMutableTreeNode(name));
     
-        if (ftpClient.changeWorkingDirectory(path)) {
-            isDirectory = true;
-            ftpClient.changeWorkingDirectory(originalWorkingDirectory);
-        }
-    
-        return isDirectory;
-    }
     public void loadChildren(DefaultMutableTreeNode node, int maxDepth) throws IOException {
         Enumeration enumeration = node.children();
         while (enumeration.hasMoreElements()) {

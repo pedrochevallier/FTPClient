@@ -2,39 +2,34 @@ package com.files;
 
 import java.io.File;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 
 public class LocalFileTree {
     private DefaultMutableTreeNode root;
 
     public LocalFileTree() {
-        root = new DefaultMutableTreeNode(new File(System.getProperty("user.home") + "/Documents"));
-
-        DefaultTreeModel model = new DefaultTreeModel(root);
-
-        File[] roots = File.listRoots();
-        for (File file : roots) {
-            DefaultMutableTreeNode node = new DefaultMutableTreeNode(file);
-            root.add(node);
-        }
-
-        buildTree(root);
+        File homeDirectory = new File(System.getProperty("user.home") + File.separator + "Documents");
+        root = new DefaultMutableTreeNode(homeDirectory.getName());
+        buildTree(root, homeDirectory);
     }
 
-    private void buildTree(DefaultMutableTreeNode node) {
-        File file = (File) node.getUserObject();
-
+    private void buildTree(DefaultMutableTreeNode node, File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
-
-            if (files != null) {
+    
+            if (files != null && files.length > 0) {
                 for (File child : files) {
-                    DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
+                    DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child.getName());
                     node.add(childNode);
-                    buildTree(childNode);
+                    if (child.isDirectory()) {
+                        buildTree(childNode, child);
+                    }
                 }
+            }else {
+                // Add a child node with the directory name to represent an empty directory
+                DefaultMutableTreeNode childNode = new DefaultMutableTreeNode();
+                node.add(childNode);
             }
-        }
+        } 
     }
 
     public DefaultMutableTreeNode getRoot() {
