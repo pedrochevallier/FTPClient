@@ -1,6 +1,7 @@
 package com.ftp;
 
 import java.awt.*;
+import java.awt.color.ProfileDataException;
 import java.awt.event.*;
 import java.io.IOException;
 
@@ -95,30 +96,38 @@ public class FTPClientGUI extends JFrame {
 
         c.gridx = 0;
         c.gridy = 1;
-        add(userLabel, c);
+        add(portLabel, c);
 
         c.gridx = 1;
         c.gridy = 1;
+        add(portField, c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        add(userLabel, c);
+
+        c.gridx = 1;
+        c.gridy = 2;
         add(userField, c);
 
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = 3;
         add(passwordLabel, c);
 
         c.gridx = 1;
-        c.gridy = 2;
+        c.gridy = 3;
         add(passwordField, c);
 
         c.gridx = 0;
-        c.gridy = 3;
+        c.gridy = 4;
         add(connectButton, c);
 
         c.gridx = 1;
-        c.gridy = 3;
+        c.gridy = 4;
         add(disconnectButton, c);
 
         c.gridx = 0;
-        c.gridy = 4;
+        c.gridy = 5;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 1;
@@ -126,7 +135,7 @@ public class FTPClientGUI extends JFrame {
         add(localScrollPane, c);
 
         c.gridx = 2;
-        c.gridy = 4;
+        c.gridy = 5;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 1;
@@ -134,14 +143,14 @@ public class FTPClientGUI extends JFrame {
         add(serverScrollPane, c);
 
         c.gridx = 0;
-        c.gridy = 5;
+        c.gridy = 6;
         c.gridwidth = 1;
         c.weightx = 0;
         c.weighty = 0;
         add(downloadButton, c);
 
         c.gridx = 2;
-        c.gridy = 5;
+        c.gridy = 6;
         add(uploadButton, c);
         
         //add listener to connect button
