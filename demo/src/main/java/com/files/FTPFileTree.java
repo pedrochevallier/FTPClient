@@ -13,24 +13,16 @@ public class FTPFileTree {
     private DefaultMutableTreeNode root;
     private FTPClient ftpClient;
 
-    public FTPFileTree(String server, int port, String username, String password, int maxDepth) throws IOException {
+    public FTPFileTree(String server, FTPClient client, int maxDepth) throws IOException {
         root = new DefaultMutableTreeNode(server);
+        ftpClient = client;
 
+        System.out.println("Getting server files...");
+        buildTree(root);
 
-        ftpClient = new FTPClient();
-        ftpClient.connect(server, port);
-        ftpClient.login(username, password);
-
-        buildTree(root, 0, maxDepth);
-
-        /* ftpClient.logout();
-        ftpClient.disconnect(); */
     }
 
-    private void buildTree(DefaultMutableTreeNode node, int depth, int maxDepth) throws IOException {
-        if (depth >= maxDepth) {
-            return;
-        }
+    private void buildTree(DefaultMutableTreeNode node) throws IOException {
 
         String path = getPath(node);
         FTPFile[] files = ftpClient.listFiles(path);
@@ -53,42 +45,45 @@ public class FTPFileTree {
         while (enumeration.hasMoreElements()) {
             TreeNode ancestor = enumeration.nextElement();
             if (((DefaultMutableTreeNode) ancestor).isRoot()) {
-                path.append("/");
+                
             } else {
                 path.append(ancestor.toString());
                 path.append("/");
+
             }
         }
         return path.toString();
     }
 
-    
-    public void loadChildren(DefaultMutableTreeNode node, int maxDepth) throws IOException {
+    public void loadChildren(DefaultMutableTreeNode node) throws IOException {
+        System.out.println("expanding node");
         Enumeration enumeration = node.children();
         while (enumeration.hasMoreElements()) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
             if (childNode.getChildCount() == 0) {
                 String path = getPath(childNode);
+                System.out.println(path);
                 FTPFile[] files = ftpClient.listFiles(path);
 
                 if (files != null) {
                     for (FTPFile file : files) {
-                        DefaultMutableTreeNode grandChildNode = new DefaultMutableTreeNode(file.getName());
-                        childNode.add(grandChildNode);
-
+                        DefaultMutableTreeNode grandChildNode;
                         if (file.isDirectory()) {
-                            if (maxDepth > 1) {
-                                grandChildNode.add(new DefaultMutableTreeNode());
-                            }
+                            grandChildNode = new DefaultMutableTreeNode(file.getName());
+                            childNode.add(grandChildNode);
+                        } else {
+                            grandChildNode = new DefaultMutableTreeNode(file.getName());
                         }
+                        
                     }
                 }
             }
         }
     }
 
-
     public DefaultMutableTreeNode getRoot() {
+        System.out.println("Returning root");
+        System.out.println(root);
         return root;
     }
 }
