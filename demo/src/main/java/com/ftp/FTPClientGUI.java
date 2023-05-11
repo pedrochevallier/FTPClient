@@ -3,13 +3,10 @@ package com.ftp;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.util.Enumeration;
 
-import javax.sound.sampled.SourceDataLine;
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
-import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.*;
 
 import org.apache.commons.net.ftp.FTPClient;
@@ -161,10 +158,14 @@ public class FTPClientGUI extends JFrame {
 
                 try {
                     ftpClient = Connection.Connect(host, port, user, password);
-                    connectButton.setEnabled(false);
-                    disconnectButton.setEnabled(true);
-                    ftpFileTree = new FTPFileTree(host, ftpClient, 1);
-                    serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
+                    if(ftpClient == null){
+                        return;
+                    }else{
+                        connectButton.setEnabled(false);
+                        disconnectButton.setEnabled(true);
+                        ftpFileTree = new FTPFileTree(host, ftpClient, 1);
+                        serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -172,13 +173,6 @@ public class FTPClientGUI extends JFrame {
 
             }
         });
-/* 
-        FTPFileTree ftpFileTree = new FTPFileTree(host, ftpClient, 0);
-        DefaultMutableTreeNode serverRoot = ftpFileTree.getRoot();
-        DefaultTreeModel serverModel = new DefaultTreeModel(serverRoot);
-        serverTree = new JTree(serverModel);
-        serverTree.setRootVisible(true);
-        serverScrollPane = new JScrollPane(serverTree); */
 
         // Action listener for the disconnect button
         disconnectButton.addActionListener(new ActionListener() {
@@ -195,25 +189,33 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
+        // si quiero no hacerlo de forma recursiva habilito el actionListener
+        
         // Action listener for the nodes in the tree
         serverTree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent event) {
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
+                TreePath node = (TreePath) event.getPath();
+                System.out.println(node);
+                /*
+                 
                 try {
-                    ftpFileTree.loadChildren(node);
+                    ftpFileTree.buildTree(node);
                     ((DefaultTreeModel) serverTree.getModel()).reload(node);
                 } catch (IOException e) {
                     System.out.println(e);
                 }
+                 */
             }
 
             @Override
             public void treeCollapsed(TreeExpansionEvent event) {
-                // Do nothing
+                TreePath node = (TreePath) event.getPath();
+                System.out.println(node);
             }
             
-        });
+        }); 
+        
         
         
 

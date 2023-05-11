@@ -22,7 +22,8 @@ public class FTPFileTree {
 
     }
 
-    private void buildTree(DefaultMutableTreeNode node) throws IOException {
+    // crea el arbol de archivos de forma recursiva
+    public void buildTree(DefaultMutableTreeNode node) throws IOException {
 
         String path = getPath(node);
         FTPFile[] files = ftpClient.listFiles(path);
@@ -33,12 +34,19 @@ public class FTPFileTree {
                 node.add(childNode);
 
                 if (file.isDirectory()) {
-                    childNode.add(new DefaultMutableTreeNode());
+                    buildTree(childNode);
+
+                    // puedo usar buildTree para hacer el arbol de forma recursiva
+                    // o usar un actionListener para hacerlo solo cuando el usuario
+                    // abre una carpeta con la desventaja que crea un nodo vacio
+
+                    //childNode.add(new DefaultMutableTreeNode());
                 }
             }
         }
     }
 
+    // devuelve el path del nodo
     private String getPath(DefaultMutableTreeNode node) {
         StringBuilder path = new StringBuilder();
         Enumeration<TreeNode> enumeration = node.pathFromAncestorEnumeration(root);
@@ -54,9 +62,8 @@ public class FTPFileTree {
         }
         return path.toString();
     }
-
+/* 
     public void loadChildren(DefaultMutableTreeNode node) throws IOException {
-        System.out.println("expanding node");
         Enumeration enumeration = node.children();
         while (enumeration.hasMoreElements()) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
@@ -79,11 +86,10 @@ public class FTPFileTree {
                 }
             }
         }
-    }
+    } */
 
+    // devuelve el nodo raiz con todos los nodos hijo
     public DefaultMutableTreeNode getRoot() {
-        System.out.println("Returning root");
-        System.out.println(root);
         return root;
     }
 }
