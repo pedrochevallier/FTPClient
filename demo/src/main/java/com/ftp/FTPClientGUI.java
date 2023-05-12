@@ -1,18 +1,24 @@
 package com.ftp;
 
 import java.awt.*;
+import java.awt.desktop.AboutEvent;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 
 import org.apache.commons.net.ftp.FTPClient;
 
 import com.connection.Connection;
+import com.connection.SendFile;
 import com.files.FTPFileTree;
+import com.files.GetPath;
 import com.files.LocalFileTree;
 
 public class FTPClientGUI extends JFrame {
@@ -36,14 +42,24 @@ public class FTPClientGUI extends JFrame {
     private FTPClient ftpClient;
     private FTPFileTree ftpFileTree;
 
+    private TreePath localPath;
+    private TreePath serverPath;
+    private TreePath localDirPath;
+    private TreePath localFilePath;
+    private TreePath serverDirPath;
+    private TreePath serverFilePath;
+
+    private String localPathS;
+    private String serverPathS;
+
     public FTPClientGUI() throws IOException {
         // Initialize the components
         hostLabel = new JLabel("FTP Host:");
-        hostField = new JTextField("192.168.1.52");
+        hostField = new JTextField("192.168.1.20");
         portLabel = new JLabel("FTP Port: ");
         portField = new JTextField("2121");
         userLabel = new JLabel("Username:");
-        userField = new JTextField("pedro");
+        userField = new JTextField("pcheva");
         passwordLabel = new JLabel("Password:");
         passwordField = new JPasswordField("1234");
         connectButton = new JButton("Connect");
@@ -56,7 +72,7 @@ public class FTPClientGUI extends JFrame {
         DefaultMutableTreeNode localRoot = new LocalFileTree().getRoot();
         DefaultTreeModel localModel = new DefaultTreeModel(localRoot);
         localTree = new JTree(localModel);
-        localTree.setRootVisible(false);
+        localTree.setRootVisible(true);
         JScrollPane localScrollPane = new JScrollPane(localTree);
         localScrollPane.setBorder(BorderFactory.createTitledBorder("Local Files"));
 
@@ -158,9 +174,9 @@ public class FTPClientGUI extends JFrame {
 
                 try {
                     ftpClient = Connection.Connect(host, port, user, password);
-                    if(ftpClient == null){
+                    if (ftpClient == null) {
                         return;
-                    }else{
+                    } else {
                         connectButton.setEnabled(false);
                         disconnectButton.setEnabled(true);
                         ftpFileTree = new FTPFileTree(host, ftpClient, 1);
@@ -190,21 +206,21 @@ public class FTPClientGUI extends JFrame {
         });
 
         // si quiero no hacerlo de forma recursiva habilito el actionListener
-        
+
         // Action listener for the nodes in the tree
         serverTree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent event) {
                 TreePath node = (TreePath) event.getPath();
                 System.out.println(node);
+
                 /*
-                 
-                try {
-                    ftpFileTree.buildTree(node);
-                    ((DefaultTreeModel) serverTree.getModel()).reload(node);
-                } catch (IOException e) {
-                    System.out.println(e);
-                }
+                 * try {
+                 * ftpFileTree.buildTree(node);
+                 * ((DefaultTreeModel) serverTree.getModel()).reload(node);
+                 * } catch (IOException e) {
+                 * System.out.println(e);
+                 * }
                  */
             }
 
@@ -213,11 +229,63 @@ public class FTPClientGUI extends JFrame {
                 TreePath node = (TreePath) event.getPath();
                 System.out.println(node);
             }
-            
-        }); 
-        
-        
-        
+
+        });
+
+        localTree.addTreeSelectionListener(new TreeSelectionListener() {
+
+            @Override
+            public void valueChanged(TreeSelectionEvent event) {
+
+                TreePath localPath = event.getPath();
+
+                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) localTree.getLastSelectedPathComponent();
+                if(selectedNode.isLeaf()){
+                    localFilePath = localPath;
+                    localDirPath = null;
+                }else{
+                    localDirPath = localPath;
+                    localFilePath = null;
+                }
+            }
+
+        });
+
+        serverTree.addTreeSelectionListener(new TreeSelectionListener() {
+
+            @Override
+            public void valueChanged(TreeSelectionEvent event) {
+                TreePath serverPath = event.getPath();
+
+                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) serverTree.getLastSelectedPathComponent();
+                if(selectedNode.isLeaf()){
+                    serverFilePath = serverPath;
+                    serverDirPath = null;
+                }else{
+                    serverDirPath = serverPath;
+                    serverFilePath = null;
+                }
+            }
+
+        });
+
+        uploadButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (localFilePath != null && serverDirPath != null) {
+                    localPathS = GetPath.getLocalFilePath(localFilePath);
+                    serverPathS = GetPath.getServerDirPath(serverDirPath);
+
+                    // 
+                    String[] arrOfString = localPathS.split("\\\\", 0);
+                    System.out.println(localPathS + ' ' + serverPathS + ' ' + arrOfString[arrOfString.length-1]);
+                    // SendFile.UploadFile(ftpClient, localPathS, serverPathS);
+                } else {
+                    System.out.println("You need to select a path on the local tree and the server tree");
+                }
+            }
+        });
 
         // Set the frame properties
         setTitle("FTP Client");
@@ -226,7 +294,6 @@ public class FTPClientGUI extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
-
 
     public static void main(String[] args) throws IOException {
         // Create the GUI instance

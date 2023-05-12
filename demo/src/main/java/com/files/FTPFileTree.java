@@ -1,5 +1,6 @@
 package com.files;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Enumeration;
 
@@ -14,7 +15,7 @@ public class FTPFileTree {
     private FTPClient ftpClient;
 
     public FTPFileTree(String server, FTPClient client, int maxDepth) throws IOException {
-        root = new DefaultMutableTreeNode(server);
+        root = new DefaultMutableTreeNode(File.separatorChar);
         ftpClient = client;
 
         System.out.println("Getting server files...");
