@@ -15,11 +15,11 @@ public class Connection {
 
 
         try {
+            //ftpClient.enterLocalPassiveMode();
             ftpClient.connect(host, port);
             System.out.println("Connecting to server...");
             ftpClient.login(user, password);
             System.out.println("Connection succesfull!");
-            //ftpClient.enterLocalPassiveMode();
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             return ftpClient;
         } catch (SocketException e) {

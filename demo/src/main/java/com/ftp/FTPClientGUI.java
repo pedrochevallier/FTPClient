@@ -1,7 +1,6 @@
 package com.ftp;
 
 import java.awt.*;
-import java.awt.desktop.AboutEvent;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +37,8 @@ public class FTPClientGUI extends JFrame {
     private JButton downloadButton;
     private JButton uploadButton;
     private JButton deleteServerButton;
+    private JButton newFolder;
+    private JButton reloadServer;
     private JTextArea output;
 
     private FTPClient ftpClient;
@@ -68,6 +69,8 @@ public class FTPClientGUI extends JFrame {
         downloadButton = new JButton("Download");
         uploadButton = new JButton("Upload");
         deleteServerButton = new JButton("Delete File");
+        newFolder = new JButton("Create Folder");
+        reloadServer = new JButton("Reload files");
         output = new JTextArea();
 
         // Create the local file system tree
@@ -160,14 +163,21 @@ public class FTPClientGUI extends JFrame {
 
         c.gridx = 2;
         c.gridy = 7;
+        add(newFolder, c);
+
+        c.gridx = 2;
+        c.gridy = 8;
         add(deleteServerButton, c);
+
+        c.gridx = 2;
+        c.gridy = 9;
+        add(reloadServer, c);
 
         c.gridx = 0;
         c.gridy = 7;
         c.gridwidth = 3;
         c.gridheight = 4;
         add(output, c);
-
 
         // Adds listener to connect button
         connectButton.addActionListener(new ActionListener() {
@@ -186,7 +196,7 @@ public class FTPClientGUI extends JFrame {
                     } else {
                         connectButton.setEnabled(false);
                         disconnectButton.setEnabled(true);
-                        ftpFileTree = new FTPFileTree(host, ftpClient, 1);
+                        ftpFileTree = new FTPFileTree(ftpClient);
                         serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
                     }
 
@@ -203,16 +213,21 @@ public class FTPClientGUI extends JFrame {
             public void actionPerformed(ActionEvent arg0) {
                 try {
                     ftpClient.disconnect();
-                    System.out.println("Disconneted from server.");
+                    System.out.println("Disconnected from server.");
                     disconnectButton.setEnabled(false);
                     connectButton.setEnabled(true);
+                    DefaultTreeModel model = (DefaultTreeModel) serverTree.getModel();
+                    DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+                    root.removeAllChildren();
+                    model.reload();
                 } catch (IOException e) {
                     System.out.println(e);
                 }
             }
         });
 
-        //  *IMPORTANT* if I want to load the files recursively uncomment inside the Expansion Listener
+        // *IMPORTANT* if I want to load the files recursively uncomment inside the
+        // Expansion Listener
 
         // Action listener for the nodes in the tree
         serverTree.addTreeExpansionListener(new TreeExpansionListener() {
@@ -248,10 +263,10 @@ public class FTPClientGUI extends JFrame {
                 TreePath localPath = event.getPath();
 
                 DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) localTree.getLastSelectedPathComponent();
-                if(selectedNode.isLeaf()){
+                if (selectedNode.isLeaf()) {
                     localFilePath = localPath;
                     localDirPath = null;
-                }else{
+                } else {
                     localDirPath = localPath;
                     localFilePath = null;
                 }
@@ -266,14 +281,17 @@ public class FTPClientGUI extends JFrame {
             public void valueChanged(TreeSelectionEvent event) {
                 TreePath serverPath = event.getPath();
 
-                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) serverTree.getLastSelectedPathComponent();
-                if(selectedNode.isLeaf()){
-                    serverFilePath = serverPath;
-                    System.out.println(serverFilePath);
-                    serverDirPath = null;
-                }else{
-                    serverDirPath = serverPath;
-                    serverFilePath = null;
+                DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) serverTree
+                        .getLastSelectedPathComponent();
+                if (selectedNode != null) {
+                    if (selectedNode.isLeaf()) {
+                        serverFilePath = serverPath;
+                        System.out.println(serverFilePath);
+                        serverDirPath = null;
+                    } else {
+                        serverDirPath = serverPath;
+                        serverFilePath = null;
+                    }
                 }
             }
 
@@ -282,18 +300,33 @@ public class FTPClientGUI extends JFrame {
         // Adds an Action Listener to the upload button
         uploadButton.addActionListener(new ActionListener() {
 
+            // Gets the paths of the file in the local tree and the path of the folder in
+            // the server tree
+            // saves the node selected, changes to the upload directory and after uploading
+            // the file goes back to the parent directory
+            // empties the node and load the complete list of files in the upload directory
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (localFilePath != null && serverDirPath != null) {
                     localPathS = GetPath.getLocalFilePath(localFilePath);
                     serverPathS = GetPath.getServerDirPath(serverDirPath);
 
-                    // 
+                    Object selectedObject = serverTree.getLastSelectedPathComponent();
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
+
+                    // for regex to recongnize the '\' it need 4 of them
                     String[] arrOfString = localPathS.split("\\\\", 0);
-                    String fileName = arrOfString[arrOfString.length-1];
+                    String fileName = arrOfString[arrOfString.length - 1];
                     try {
                         ftpClient.changeWorkingDirectory(serverPathS);
                         SendFile.UploadFile(ftpClient, localPathS, fileName);
+
+                        ftpClient.changeToParentDirectory();
+
+                        node.removeAllChildren();
+                        ftpFileTree.buildTree(node);
+
+                        ((DefaultTreeModel) serverTree.getModel()).reload(node);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -303,21 +336,77 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
-        deleteServerButton.addActionListener(new ActionListener() {
-            
+        newFolder.addActionListener(new ActionListener() {
+
             @Override
-            public void actionPerformed(ActionEvent event){
-                if(serverFilePath != null){
-                    serverPathS = GetPath.getServerDirPath(serverFilePath);
-                    System.out.println(serverPathS);
-                    try{
-                        ftpClient.deleteFile(serverPathS);
-                        System.out.println(ftpClient.getReplyCode());
-                        System.out.println("File deleted");
-                    }catch(IOException e){
+            public void actionPerformed(ActionEvent event) {
+                if (serverDirPath != null) {
+                    String name = JOptionPane.showInputDialog("Insert the folder name", null);
+                    serverPathS = GetPath.getServerDirPath(serverDirPath);
+
+                    Object selectedObject = serverTree.getLastSelectedPathComponent();
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
+                    try {
+                        ftpClient.changeWorkingDirectory(serverPathS);
+                        ftpClient.makeDirectory(name);
+                        ftpClient.changeToParentDirectory();
+                        node.removeAllChildren();
+                        ftpFileTree.buildTree(node);
+                        ((DefaultTreeModel) serverTree.getModel()).reload(node);
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
+            }
+        });
+
+        deleteServerButton.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (serverFilePath != null) {
+                    Object selectedObject = serverTree.getLastSelectedPathComponent();
+                    if (selectedObject instanceof DefaultMutableTreeNode) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
+                        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+                        if (parent != null) {
+                            serverPathS = GetPath.getServerDirPath(serverFilePath);
+                            System.out.println(serverPathS);
+                            try {
+                                ftpClient.deleteFile(serverPathS);
+                                System.out.println(ftpClient.getReplyString());
+                                if (ftpClient.getReplyCode() == 250) {
+                                    System.out.println("File deleted");
+                                    parent.removeAllChildren();
+                                    ftpFileTree.buildTree(parent);
+                                    ((DefaultTreeModel) serverTree.getModel()).reload(parent);
+                                } else {
+                                    System.out.println("An error ocurred deleting the file");
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                }
+            }
+        });
+
+        reloadServer.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+
+                connectButton.setEnabled(false);
+                disconnectButton.setEnabled(true);
+                try {
+                    ftpFileTree = new FTPFileTree(ftpClient);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
+
             }
         });
 
@@ -334,3 +423,12 @@ public class FTPClientGUI extends JFrame {
         new FTPClientGUI();
     }
 }
+
+/*
+ * falta implementar la base de datos
+ * falta implementar borrar de local
+ * falta implementar descargar
+ * falta implementar renombrar local
+ * falta implementar que se actualize el arbol despues de crear una nueva carpeta
+ * falta implementar seleccion multiple
+ */

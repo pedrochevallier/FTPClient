@@ -23,10 +23,10 @@ public class GetPath {
         StringBuilder sb = new StringBuilder();
         Object[] nodes = serverTreePath.getPath();
         if(nodes.length ==1){
-            sb.append(File.separatorChar);
+            sb.append("/");
         }
         for (int i = 1; i < nodes.length; i++) {
-            sb.append(File.separatorChar).append(nodes[i].toString());
+            sb.append("/").append(nodes[i].toString());
         }
         return sb.toString();
     }

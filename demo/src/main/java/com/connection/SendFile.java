@@ -19,7 +19,7 @@ public class SendFile {
             String secondRemoteFile = serverPath;
             InputStream inputStream = new FileInputStream(secondLocalFile);
 
-            System.out.println("Start uploading second file");
+            System.out.println("Start uploading file");
             OutputStream outputStream = ftpClient.storeFileStream(secondRemoteFile);
             byte[] bytesIn = new byte[4096];
             int read = 0;
@@ -31,9 +31,8 @@ public class SendFile {
             outputStream.close();
             boolean completed = ftpClient.completePendingCommand();
             if (completed) {
-                System.out.println("The second file is uploaded successfully.");
+                System.out.println("file uploaded successfully.");
             }
-            System.out.println(completed);
 
             /* 
             fis = new FileInputStream(localPath);
