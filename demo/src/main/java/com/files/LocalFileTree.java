@@ -6,15 +6,15 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class LocalFileTree {
     private DefaultMutableTreeNode root;
 
-    // inicializa el nodo raiz y llama a builTree para agregarle los nodos hijo
+    // Creates the root node with the user home directory
     public LocalFileTree() {
         File homeDirectory = new File(System.getProperty("user.home") + File.separator + "Documents");
         root = new DefaultMutableTreeNode(homeDirectory.getName());
         buildTree(root, homeDirectory);
     }
 
-    // recibe el nodo raiz y le agrega los nodos hijo de forma recursiva
-    private void buildTree(DefaultMutableTreeNode node, File file) {
+    // receives the root node and gets all children nodes
+    public void buildTree(DefaultMutableTreeNode node, File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
     
@@ -34,7 +34,7 @@ public class LocalFileTree {
         } 
     }
 
-    // devuelve el nodo raiz con todos lo nodos hijo
+    // Returns the root node with all children
     public DefaultMutableTreeNode getRoot() {
         return root;
     }

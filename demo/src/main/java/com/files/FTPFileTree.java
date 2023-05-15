@@ -9,6 +9,8 @@ import javax.swing.tree.TreeNode;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import com.ftp.FTPClientGUI;
+
 public class FTPFileTree {
     private DefaultMutableTreeNode root;
     private FTPClient ftpClient;
@@ -17,7 +19,7 @@ public class FTPFileTree {
         root = new DefaultMutableTreeNode("/");
         ftpClient = client;
 
-        System.out.println("Getting server files...");
+        FTPClientGUI.setOutput("Getting server files...\n");
         buildTree(root);
 
     }
@@ -26,7 +28,6 @@ public class FTPFileTree {
     public void buildTree(DefaultMutableTreeNode node) throws IOException {
         String path = getPath(node);
         FTPFile[] files = ftpClient.listFiles(path);
-        System.out.println(path + " has " + files.length + " elements");
 
         if (files.length > 0) {
             for (FTPFile file : files) {

@@ -6,6 +6,8 @@ import java.net.SocketException;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
+import com.ftp.FTPClientGUI;
+
 public class Connection {
     FTPClient ftpCient;
 
@@ -17,16 +19,16 @@ public class Connection {
         try {
             //ftpClient.enterLocalPassiveMode();
             ftpClient.connect(host, port);
-            System.out.println("Connecting to server...");
+            FTPClientGUI.setOutput("Connecting to server...\n");
             ftpClient.login(user, password);
-            System.out.println("Connection succesfull!");
+            FTPClientGUI.setOutput("Connection succesfull!\n");
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             return ftpClient;
         } catch (SocketException e) {
-            System.out.println("Connection refused.");
+            FTPClientGUI.setOutput("Connection refused.\n");
             return null;
         } catch (IOException e) {
-            System.out.println("Somethign went wrong.");
+            FTPClientGUI.setOutput("Somethign went wrong.\n");
             return null;
         }
 

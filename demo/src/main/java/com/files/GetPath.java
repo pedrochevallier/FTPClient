@@ -2,6 +2,7 @@ package com.files;
 
 import java.io.File;
 
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 public class GetPath {
@@ -29,5 +30,17 @@ public class GetPath {
             sb.append("/").append(nodes[i].toString());
         }
         return sb.toString();
+    }
+
+    public static String getParentPath(TreeNode[] parentTreePath){
+        String homeDirectory = System.getProperty("user.home");
+                    
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(homeDirectory);
+
+                    for (TreeNode pathNode : parentTreePath) {
+                        sb.append(File.separatorChar).append(pathNode.toString());
+                    }
+        return sb.toString(); 
     }
 }
