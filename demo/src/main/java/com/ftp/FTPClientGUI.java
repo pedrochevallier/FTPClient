@@ -2,7 +2,7 @@ package com.ftp;
 
 import java.awt.event.*;
 import java.io.File;
-
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import javax.swing.*;
@@ -196,7 +196,7 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
-        // *IMPORTANT* if I want to load the files recursively uncomment inside the
+        // *IMPORTANT* if I want to load the files recursively I need to create an
         // Expansion Listener
 
         // Adds a Selection Listener to the local tree
@@ -233,7 +233,8 @@ public class FTPClientGUI extends JFrame {
                 File fileToRename = new File(GetPath.getLocalFilePath(localPath));
                 String path = GetPath.getParentPath(parentPath);
                 File parentFile = new File(path);
-                String name = JOptionPane.showInputDialog("Insert new file name (don't forget to include file extension)", null);
+                String name = JOptionPane
+                        .showInputDialog("Insert new file name (don't forget to include file extension)", null);
                 File newFileName = new File(path + File.separatorChar + name);
                 if (fileToRename.renameTo(newFileName)) {
                     parent.removeAllChildren();
@@ -314,6 +315,7 @@ public class FTPClientGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (localFilePath != null && serverDirPath != null) {
+
                     localPathS = GetPath.getLocalFilePath(localFilePath);
                     serverPathS = GetPath.getServerDirPath(serverDirPath);
 
@@ -338,6 +340,43 @@ public class FTPClientGUI extends JFrame {
                     }
                 } else {
                     setOutput("You need to select a path on the local tree and the server tree\n");
+                }
+            }
+        });
+
+        downloadButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                // necesito el directorio del servidor
+                // el directorio donde voy a descargar el archivo
+                // el nombre del archivo en el servidor
+
+                if (localDirPath != null && serverFilePath != null) {
+                    Object selectedObject = localTree.getLastSelectedPathComponent();
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
+                    TreeNode[] nodePath = node.getPath();
+                    String path = GetPath.getParentPath(nodePath);
+                    File nodeFile = new File(path);
+
+                    localPathS = GetPath.getLocalFilePath(localDirPath);
+                    serverPathS = GetPath.getServerDirPath(serverFilePath);
+
+                    String[] arrOfString = serverPathS.split("/", 0);
+                    String fileName = arrOfString[arrOfString.length - 1];
+
+                    try {
+
+                        // necesito sacar el nombre del archivo y reload el local file
+                        FileOutputStream outputStream = new FileOutputStream(
+                                localPathS + File.separatorChar + fileName);
+                        ftpClient.retrieveFile(serverPathS, outputStream);
+                        outputStream.close();
+                        node.removeAllChildren();
+                        localFileTree.buildTree(node, nodeFile);
+                        ((DefaultTreeModel) localTree.getModel()).reload(node);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -400,14 +439,13 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
-        // TEST
+        // reload all the files from the server
         reloadButton.addActionListener(new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent event) {
 
                 try {
-                    System.out.println("Current directory at reload: " + ftpClient.printWorkingDirectory());
                     ftpClient.changeWorkingDirectory("/");
                     ftpFileTree = new FTPFileTree(ftpClient);
                 } catch (IOException e) {
