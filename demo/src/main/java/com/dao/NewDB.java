@@ -18,7 +18,8 @@ public class NewDB {
                          "(ID INT AUTO_INCREMENT PRIMARY KEY, " +
                          " HOST           VARCHAR(255)    NOT NULL, " +
                          " PORT            INT     NOT NULL, " +
-                         " USERNAME        VARCHAR(255));";
+                         " USERNAME        VARCHAR(255) NOT NULL, " +
+                         " PASSWORD       VARCHAR(20) NOT NULL);";
             stmt.executeUpdate(sql);
             System.out.println("Table created successfully");
             

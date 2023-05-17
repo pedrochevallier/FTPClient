@@ -28,13 +28,15 @@ public class FTPClientGUI extends JFrame {
     private static JTextField hostField;
     private static JTextField portField;
     private static JTextField userField;
-    private JPasswordField passwordField;
+    private static JPasswordField passwordField;
     private JButton connectButton;
     private JButton disconnectButton;
     private JButton connectionsButton;
+    private JLabel downloadLabel;
     private JButton downloadButton;
     private JButton localDeleteButton;
     private JButton newFolderButton;
+    private JLabel uploadLabel;
     private JButton uploadButton;
     private JButton serverDeleteButton;
     private JButton reloadButton;
@@ -57,6 +59,7 @@ public class FTPClientGUI extends JFrame {
     private TreePath localFilePath;
     private TreePath serverDirPath;
     private TreePath serverFilePath;
+    private JScrollPane outputScrollPane;
 
     private String localPathS;
     private String serverPathS;
@@ -74,17 +77,27 @@ public class FTPClientGUI extends JFrame {
         connectButton = new JButton("Connect");
         disconnectButton = new JButton("Disconnect");
         connectionsButton = new JButton("See connections");
-        downloadButton = new JButton("Download");
+        downloadLabel = new JLabel("Download");
+        downloadButton = new JButton();
         localDeleteButton = new JButton("Delete");
         newFolderButton = new JButton("New Folder");
-        uploadButton = new JButton("Upload");
+        uploadLabel = new JLabel("Upload");
+        uploadButton = new JButton();
         serverDeleteButton = new JButton("Delete");
         reloadButton = new JButton("Reload");
         renameButton = new JButton("Rename");
         output = new JTextArea(5, 5);
-        JScrollPane outputScrollPane = new JScrollPane(output);
+        outputScrollPane = new JScrollPane(output);
 
-        output.setBorder(BorderFactory.createTitledBorder("Output"));
+        outputScrollPane.setBorder(BorderFactory.createTitledBorder("Output"));
+
+        ImageIcon downloadIcon = new ImageIcon("FTPClientv2/demo/src/main/java/com/assets/download.png");
+        downloadIcon = new ImageIcon(downloadIcon.getImage().getScaledInstance(40, -1, java.awt.Image.SCALE_SMOOTH));
+        downloadButton.setIcon(downloadIcon);
+
+        ImageIcon uploadIcon = new ImageIcon("FTPClientv2/demo/src/main/java/com/assets/upload.png");
+        uploadIcon = new ImageIcon(uploadIcon.getImage().getScaledInstance(40, -1, java.awt.Image.SCALE_SMOOTH));
+        uploadButton.setIcon(uploadIcon);
 
         DAOConnection con = new DAOConnection();
 
@@ -124,9 +137,11 @@ public class FTPClientGUI extends JFrame {
         add(connectButton);
         add(disconnectButton);
         add(connectionsButton);
+        add(downloadLabel);
         add(downloadButton);
         add(localDeleteButton);
         add(newFolderButton);
+        add(uploadLabel);
         add(uploadButton);
         add(serverDeleteButton);
         add(reloadButton);
@@ -140,29 +155,47 @@ public class FTPClientGUI extends JFrame {
         portLabel.setBounds(185, 5, 100, 25);
         passwordLabel.setBounds(395, 5, 100, 25);
         userLabel.setBounds(285, 5, 100, 25);
+
         // connect inputs
         hostField.setBounds(50, 30, 100, 25);
         portField.setBounds(160, 30, 100, 25);
         userField.setBounds(270, 30, 100, 25);
         passwordField.setBounds(380, 30, 100, 25);
+
         // connect - disconnect buttons
         connectButton.setBounds(495, 30, 100, 25);
         disconnectButton.setBounds(610, 30, 100, 25);
         connectionsButton.setBounds(725, 30, 100, 25);
+
         // file trees
         localScrollPane.setBounds(50, 70, 400, 550);
         serverScrollPane.setBounds(550, 70, 400, 550);
+
+        // upload and download buttons
+        uploadLabel.setBounds(480, 245, 50, 25);
+        uploadButton.setBounds(475, 265, 50, 50);
+        downloadLabel.setBounds(472, 335, 80, 25);
+        downloadButton.setBounds(475, 355, 50, 50);
+
         // local tree buttons
-        downloadButton.setBounds(50, 665, 100, 25);
-        localDeleteButton.setBounds(50, 695, 100, 25);
-        renameButton.setBounds(160, 665, 100, 25);
+        localDeleteButton.setBounds(110, 640, 100, 25);
+        renameButton.setBounds(220, 640, 100, 25);
+
         // server tree buttons
-        newFolderButton.setBounds(550, 695, 100, 25);
-        uploadButton.setBounds(550, 665, 100, 25);
-        serverDeleteButton.setBounds(660, 665, 100, 25);
-        reloadButton.setBounds(660, 695, 100, 25);
+        newFolderButton.setBounds(585, 640, 100, 25);
+        serverDeleteButton.setBounds(695, 640, 100, 25);
+        reloadButton.setBounds(805, 640, 100, 25);
+
         // outut field
-        outputScrollPane.setBounds(200, 745, 600, 100);
+        outputScrollPane.setBounds(200, 685, 600, 150);
+
+        // all buttons that require a connection are disabled until established
+        disconnectButton.setEnabled(false);
+        uploadButton.setEnabled(false);
+        downloadButton.setEnabled(false);
+        newFolderButton.setEnabled(false);
+        serverDeleteButton.setEnabled(false);
+        reloadButton.setEnabled(false);
 
         // Adds listener to connect button
         connectButton.addActionListener(new ActionListener() {
@@ -171,22 +204,35 @@ public class FTPClientGUI extends JFrame {
             public void actionPerformed(ActionEvent event) {
                 String host = hostField.getText();
                 String user = userField.getText();
-                Integer port = Integer.parseInt(portField.getText());
+                String portString = portField.getText();
                 String password = String.valueOf(passwordField.getPassword());
 
-                try {
-                    ftpClient = Connect.connect(host, port, user, password);
-                    if (ftpClient == null) {
-                        return;
-                    } else {
-                        connectButton.setEnabled(false);
-                        disconnectButton.setEnabled(true);
-                        ftpFileTree = new FTPFileTree(ftpClient);
-                        serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
+                if (!host.isEmpty() && !user.isEmpty() && !portString.isEmpty() && !password.isEmpty()) {
+                    try {
+                        Integer port = Integer.parseInt(portString);
+                        ftpClient = Connect.connect(host, port, user, password);
+                        if (ftpClient == null) {
+                            return;
+                        } else {
+                            connectButton.setEnabled(false);
+                            disconnectButton.setEnabled(true);
+                            uploadButton.setEnabled(true);
+                            downloadButton.setEnabled(true);
+                            newFolderButton.setEnabled(true);
+                            serverDeleteButton.setEnabled(true);
+                            reloadButton.setEnabled(true);
+                            ftpFileTree = new FTPFileTree(ftpClient);
+                            serverTree.setModel(new DefaultTreeModel(ftpFileTree.getRoot()));
+                        }
+                    } catch (NumberFormatException e) {
+                        setOutput("Make sure the port is a number\n");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
 
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else {
+                    setOutput("Please fill all connection fields\n");
                 }
 
             }
@@ -201,6 +247,11 @@ public class FTPClientGUI extends JFrame {
                     setOutput("Disconnected from server.\n");
                     disconnectButton.setEnabled(false);
                     connectButton.setEnabled(true);
+                    uploadButton.setEnabled(false);
+                    downloadButton.setEnabled(false);
+                    newFolderButton.setEnabled(false);
+                    serverDeleteButton.setEnabled(false);
+                    reloadButton.setEnabled(false);
                     DefaultTreeModel model = (DefaultTreeModel) serverTree.getModel();
                     DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
                     root.removeAllChildren();
@@ -221,12 +272,10 @@ public class FTPClientGUI extends JFrame {
                 } catch (DAOException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
-					e.printStackTrace();
-				}
+                    e.printStackTrace();
+                }
             }
         });
-
-        
 
         // *IMPORTANT* if I want to load the files recursively I need to create an
         // Expansion Listener
@@ -259,27 +308,27 @@ public class FTPClientGUI extends JFrame {
             @Override
             public void actionPerformed(ActionEvent event) {
                 if (localFilePath != null) {
-                Object selectedObject = localTree.getLastSelectedPathComponent();
-                DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
-                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                TreeNode[] parentPath = parent.getPath();
-                File fileToRename = new File(GetPath.getLocalFilePath(localPath));
-                String path = GetPath.getParentPath(parentPath);
-                File parentFile = new File(path);
-                String name = JOptionPane
-                        .showInputDialog("Insert new file name (don't forget to include the file extension)", null);
-                File newFileName = new File(path + File.separatorChar + name);
-                if (fileToRename.renameTo(newFileName)) {
-                    parent.removeAllChildren();
-                    localFileTree.buildTree(parent, parentFile);
-                    ((DefaultTreeModel) localTree.getModel()).reload(parent);
-                    setOutput("File renamed successfully\n");
+                    Object selectedObject = localTree.getLastSelectedPathComponent();
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
+                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+                    TreeNode[] parentPath = parent.getPath();
+                    File fileToRename = new File(GetPath.getLocalFilePath(localPath));
+                    String path = GetPath.getParentPath(parentPath);
+                    File parentFile = new File(path);
+                    String name = JOptionPane
+                            .showInputDialog("Insert new file name (don't forget to include the file extension)", null);
+                    File newFileName = new File(path + File.separatorChar + name);
+                    if (fileToRename.renameTo(newFileName)) {
+                        parent.removeAllChildren();
+                        localFileTree.buildTree(parent, parentFile);
+                        ((DefaultTreeModel) localTree.getModel()).reload(parent);
+                        setOutput("File renamed successfully\n");
+                    } else {
+                        setOutput("Failed to rename file\n");
+                    }
                 } else {
-                    setOutput("Failed to rename file\n");
+                    setOutput("You need to select a file on the local tree\n");
                 }
-            }else{
-                setOutput("You need to select a file on the local tree\n");
-            }
             }
         });
 
@@ -313,7 +362,7 @@ public class FTPClientGUI extends JFrame {
                             setOutput("Sorry, unable to delete file.\n");
                         }
                     }
-                }else{
+                } else {
                     setOutput("You need to select a file on the local tree\n");
                 }
             }
@@ -415,7 +464,7 @@ public class FTPClientGUI extends JFrame {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else {
                     setOutput("You need to select a path on the local tree and the server tree\n");
                 }
             }
@@ -441,7 +490,7 @@ public class FTPClientGUI extends JFrame {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }else{
+                } else {
                     setOutput("You need to select a path on the server tree\n");
                 }
             }
@@ -461,22 +510,26 @@ public class FTPClientGUI extends JFrame {
                         DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
                         if (parent != null) {
                             serverPathS = GetPath.getServerDirPath(serverFilePath);
-                            try {
-                                ftpClient.deleteFile(serverPathS);
-                                if (ftpClient.getReplyCode() == 250) {
-                                    setOutput("File deleted\n");
-                                    parent.removeAllChildren();
-                                    ftpFileTree.buildTree(parent);
-                                    ((DefaultTreeModel) serverTree.getModel()).reload(parent);
-                                } else {
-                                    setOutput("An error ocurred deleting the file\n");
+                            int result = JOptionPane.showConfirmDialog(null,
+                                    "Are you sure you want to delete?");
+                            if (result == JOptionPane.YES_OPTION) {
+                                try {
+                                    ftpClient.deleteFile(serverPathS);
+                                    if (ftpClient.getReplyCode() == 250) {
+                                        setOutput("File deleted\n");
+                                        parent.removeAllChildren();
+                                        ftpFileTree.buildTree(parent);
+                                        ((DefaultTreeModel) serverTree.getModel()).reload(parent);
+                                    } else {
+                                        setOutput("An error ocurred deleting the file\n");
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
                                 }
-                            } catch (IOException e) {
-                                e.printStackTrace();
                             }
                         }
                     }
-                }else{
+                } else {
                     setOutput("You need to select a file on the server tree\n");
                 }
             }
@@ -510,20 +563,26 @@ public class FTPClientGUI extends JFrame {
     public static void setOutput(String detail) {
         output.append(detail);
     }
-    public static void setHost(String host){
+
+    public static void setHost(String host) {
         hostField.setText(host);
     }
-    public static void setPort(int port){
+
+    public static void setPort(int port) {
         String portString = Integer.toString(port);
         portField.setText(portString);
     }
-    public static void setUser(String user){
+
+    public static void setUser(String user) {
         userField.setText(user);
     }
 
+    public static void setPassword(String password) {
+        passwordField.setText(password);
+    }
 
     public static void main(String[] args) throws IOException {
-        //NewDB.createDataBase();
+        // NewDB.createDataBase();
         new FTPClientGUI();
     }
 }

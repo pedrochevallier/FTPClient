@@ -31,6 +31,7 @@ public class Connect {
             element.setHost(host);
             element.setPort(port);
             element.setUserName(user);
+            element.setPassword(password);
             DAOConnection con = new DAOConnection();
             try {
                 con.save(element);

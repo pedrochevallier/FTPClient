@@ -53,6 +53,7 @@ public class ConnectionDisplay extends JFrame {
                     FTPClientGUI.setHost(selected.getHost());
                     FTPClientGUI.setPort(selected.getPort());
                     FTPClientGUI.setUser(selected.getUserName());
+                    FTPClientGUI.setPassword(selected.getPassword());
                     dispose();
                 } else {
                     JOptionPane.showMessageDialog(null, "No item selected");
@@ -101,12 +102,12 @@ public class ConnectionDisplay extends JFrame {
         add(select);
         add(delete);
 
-        scrollPane.setBounds(50, 50, 300, 100);
-        select.setBounds(150, 175, 100, 25);
-        delete.setBounds(150, 215, 100, 25);
+        scrollPane.setBounds(50, 50, 400, 100);
+        select.setBounds(200, 175, 100, 25);
+        delete.setBounds(200, 215, 100, 25);
 
         setTitle("Connections");
-        setSize(400, 300);
+        setSize(500, 300);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setVisible(true);
@@ -118,8 +119,8 @@ public class ConnectionDisplay extends JFrame {
         // transform ArrayList to String[]
         for (int i = 0; i < con.size(); i++) {
             Connection connection = con.get(i);
-            connectionStrings[i] = connection.getId() + " | Host: " + connection.getHost() + " | Port: "
-                    + connection.getPort() + " | User: " + connection.getUserName();
+            connectionStrings[i] =  " Host: " + connection.getHost() + " | Port: "
+                    + connection.getPort() + " | User: " + connection.getUserName() + " | ******";
         }
         return connectionStrings;
     }

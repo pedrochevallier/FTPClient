@@ -35,7 +35,7 @@ public class SendFile {
             outputStream.close();
             boolean completed = ftpClient.completePendingCommand();
             if (completed) {
-                FTPClientGUI.setOutput("file uploaded successfully.\n");
+                FTPClientGUI.setOutput("File uploaded successfully.\n");
             }else{
                 FTPClientGUI.setOutput("Somethign went wrong uploading the file\n");
             }

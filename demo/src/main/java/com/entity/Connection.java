@@ -5,6 +5,7 @@ public class Connection {
     private String host;
     private int port;
     private String username;
+    private String password;
 
     //setters
     public void setId(int id){
@@ -19,6 +20,9 @@ public class Connection {
     public void setUserName(String username){
         this.username = username;
     }
+    public void setPassword(String password){
+        this.password = password;
+    }
 
     //getters
     public int getId(){
@@ -32,5 +36,8 @@ public class Connection {
     }
     public String getUserName(){
         return username;
+    }
+    public String getPassword(){
+        return password;
     }
 }

@@ -22,18 +22,21 @@ public class DAOConnection implements IDAO<Connection> {
             PreparedStatement preparedStatement = null;
             Class.forName(DB_JDBC_DRIVER);
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-            preparedStatement = conn.prepareStatement("INSERT INTO CONNECTION (HOST, PORT, USERNAME) " +
-            "SELECT ?, ?, ? " +
+            preparedStatement = conn.prepareStatement("INSERT INTO CONNECTION (HOST, PORT, USERNAME, PASSWORD) " +
+            "SELECT ?, ?, ?, ? " +
             "WHERE NOT EXISTS (" +
             "    SELECT * FROM CONNECTION " +
-            "    WHERE HOST = ? AND PORT = ? AND USERNAME = ?);");
+            "    WHERE HOST = ? AND PORT = ? AND USERNAME = ? AND PASSWORD = ?);");
 
             preparedStatement.setString(1, element.getHost());
             preparedStatement.setInt(2, element.getPort());
             preparedStatement.setString(3, element.getUserName());
-            preparedStatement.setString(4, element.getHost());
-            preparedStatement.setInt(5, element.getPort());
-            preparedStatement.setString(6, element.getUserName());
+            preparedStatement.setString(4, element.getPassword());
+
+            preparedStatement.setString(5, element.getHost());
+            preparedStatement.setInt(6, element.getPort());
+            preparedStatement.setString(7, element.getUserName());
+            preparedStatement.setString(8, element.getPassword());
 
             preparedStatement.executeUpdate();
             preparedStatement.close();
@@ -77,9 +80,9 @@ public class DAOConnection implements IDAO<Connection> {
                 connection.setHost(rs.getString("HOST"));
                 connection.setPort(rs.getInt("PORT"));
                 connection.setUserName(rs.getString("USERNAME"));
+                connection.setPassword(rs.getString("PASSWORD"));
 
                 allConnections.add(connection);
-
             }
             rs.close();
             stmt.close();
