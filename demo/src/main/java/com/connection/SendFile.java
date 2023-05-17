@@ -8,7 +8,7 @@ import java.io.OutputStream;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import com.ftp.FTPClientGUI;
+import com.gui.FTPClientGUI;
 
 
 public class SendFile {

@@ -9,7 +9,7 @@ import javax.swing.tree.TreeNode;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
-import com.ftp.FTPClientGUI;
+import com.gui.FTPClientGUI;
 
 public class FTPFileTree {
     private DefaultMutableTreeNode root;

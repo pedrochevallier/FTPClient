@@ -1,4 +1,4 @@
-package com.ftp;
+package com.gui;
 
 import java.awt.event.*;
 import java.io.File;
@@ -12,8 +12,10 @@ import javax.swing.tree.*;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import com.connection.Connection;
+import com.connection.Connect;
 import com.connection.SendFile;
+import com.dao.DAOConnection;
+import com.dao.DAOException;
 import com.files.FTPFileTree;
 import com.files.GetPath;
 import com.files.LocalFileTree;
@@ -23,12 +25,13 @@ public class FTPClientGUI extends JFrame {
     private JLabel portLabel;
     private JLabel passwordLabel;
     private JLabel userLabel;
-    private JTextField hostField;
-    private JTextField portField;
-    private JTextField userField;
+    private static JTextField hostField;
+    private static JTextField portField;
+    private static JTextField userField;
     private JPasswordField passwordField;
     private JButton connectButton;
     private JButton disconnectButton;
+    private JButton connectionsButton;
     private JButton downloadButton;
     private JButton localDeleteButton;
     private JButton newFolderButton;
@@ -70,6 +73,7 @@ public class FTPClientGUI extends JFrame {
         passwordField = new JPasswordField(5);
         connectButton = new JButton("Connect");
         disconnectButton = new JButton("Disconnect");
+        connectionsButton = new JButton("See connections");
         downloadButton = new JButton("Download");
         localDeleteButton = new JButton("Delete");
         newFolderButton = new JButton("New Folder");
@@ -78,8 +82,17 @@ public class FTPClientGUI extends JFrame {
         reloadButton = new JButton("Reload");
         renameButton = new JButton("Rename");
         output = new JTextArea(5, 5);
+        JScrollPane outputScrollPane = new JScrollPane(output);
 
         output.setBorder(BorderFactory.createTitledBorder("Output"));
+
+        DAOConnection con = new DAOConnection();
+
+        try {
+            con.searchAll();
+        } catch (DAOException e) {
+            e.printStackTrace();
+        }
 
         // Create the local file system tree
         localFileTree = new LocalFileTree();
@@ -110,13 +123,14 @@ public class FTPClientGUI extends JFrame {
         add(passwordField);
         add(connectButton);
         add(disconnectButton);
+        add(connectionsButton);
         add(downloadButton);
         add(localDeleteButton);
         add(newFolderButton);
         add(uploadButton);
         add(serverDeleteButton);
         add(reloadButton);
-        add(output);
+        add(outputScrollPane);
         add(renameButton);
         add(localScrollPane);
         add(serverScrollPane);
@@ -134,6 +148,7 @@ public class FTPClientGUI extends JFrame {
         // connect - disconnect buttons
         connectButton.setBounds(495, 30, 100, 25);
         disconnectButton.setBounds(610, 30, 100, 25);
+        connectionsButton.setBounds(725, 30, 100, 25);
         // file trees
         localScrollPane.setBounds(50, 70, 400, 550);
         serverScrollPane.setBounds(550, 70, 400, 550);
@@ -147,20 +162,20 @@ public class FTPClientGUI extends JFrame {
         serverDeleteButton.setBounds(660, 665, 100, 25);
         reloadButton.setBounds(660, 695, 100, 25);
         // outut field
-        output.setBounds(45, 745, 630, 80);
+        outputScrollPane.setBounds(200, 745, 600, 100);
 
         // Adds listener to connect button
         connectButton.addActionListener(new ActionListener() {
 
             @Override
-            public void actionPerformed(ActionEvent arg0) {
+            public void actionPerformed(ActionEvent event) {
                 String host = hostField.getText();
                 String user = userField.getText();
                 Integer port = Integer.parseInt(portField.getText());
                 String password = String.valueOf(passwordField.getPassword());
 
                 try {
-                    ftpClient = Connection.Connect(host, port, user, password);
+                    ftpClient = Connect.connect(host, port, user, password);
                     if (ftpClient == null) {
                         return;
                     } else {
@@ -180,7 +195,7 @@ public class FTPClientGUI extends JFrame {
         // Adds Action listener for the disconnect button
         disconnectButton.addActionListener(new ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent arg0) {
+            public void actionPerformed(ActionEvent event) {
                 try {
                     ftpClient.disconnect();
                     setOutput("Disconnected from server.\n");
@@ -195,6 +210,23 @@ public class FTPClientGUI extends JFrame {
                 }
             }
         });
+
+        // Ads Action Listener for the connections Button
+        connectionsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                ConnectionDisplay display = new ConnectionDisplay();
+                try {
+                    display.showConnections();
+                } catch (DAOException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+					e.printStackTrace();
+				}
+            }
+        });
+
+        
 
         // *IMPORTANT* if I want to load the files recursively I need to create an
         // Expansion Listener
@@ -226,6 +258,7 @@ public class FTPClientGUI extends JFrame {
 
             @Override
             public void actionPerformed(ActionEvent event) {
+                if (localFilePath != null) {
                 Object selectedObject = localTree.getLastSelectedPathComponent();
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedObject;
                 DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
@@ -234,7 +267,7 @@ public class FTPClientGUI extends JFrame {
                 String path = GetPath.getParentPath(parentPath);
                 File parentFile = new File(path);
                 String name = JOptionPane
-                        .showInputDialog("Insert new file name (don't forget to include file extension)", null);
+                        .showInputDialog("Insert new file name (don't forget to include the file extension)", null);
                 File newFileName = new File(path + File.separatorChar + name);
                 if (fileToRename.renameTo(newFileName)) {
                     parent.removeAllChildren();
@@ -244,6 +277,9 @@ public class FTPClientGUI extends JFrame {
                 } else {
                     setOutput("Failed to rename file\n");
                 }
+            }else{
+                setOutput("You need to select a file on the local tree\n");
+            }
             }
         });
 
@@ -277,6 +313,8 @@ public class FTPClientGUI extends JFrame {
                             setOutput("Sorry, unable to delete file.\n");
                         }
                     }
+                }else{
+                    setOutput("You need to select a file on the local tree\n");
                 }
             }
         });
@@ -377,6 +415,8 @@ public class FTPClientGUI extends JFrame {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }else{
+                    setOutput("You need to select a path on the local tree and the server tree\n");
                 }
             }
         });
@@ -401,6 +441,8 @@ public class FTPClientGUI extends JFrame {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
+                }else{
+                    setOutput("You need to select a path on the server tree\n");
                 }
             }
         });
@@ -434,7 +476,8 @@ public class FTPClientGUI extends JFrame {
                             }
                         }
                     }
-
+                }else{
+                    setOutput("You need to select a file on the server tree\n");
                 }
             }
         });
@@ -467,13 +510,20 @@ public class FTPClientGUI extends JFrame {
     public static void setOutput(String detail) {
         output.append(detail);
     }
+    public static void setHost(String host){
+        hostField.setText(host);
+    }
+    public static void setPort(int port){
+        String portString = Integer.toString(port);
+        portField.setText(portString);
+    }
+    public static void setUser(String user){
+        userField.setText(user);
+    }
+
 
     public static void main(String[] args) throws IOException {
+        //NewDB.createDataBase();
         new FTPClientGUI();
     }
 }
-
-/*
- * falta implementar la base de datos
- * falta implementar descargar
- */
