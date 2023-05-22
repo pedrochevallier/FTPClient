@@ -16,6 +16,7 @@ import com.connection.Connect;
 import com.connection.SendFile;
 import com.dao.DAOConnection;
 import com.dao.DAOException;
+import com.dao.NewDB;
 import com.files.FTPFileTree;
 import com.files.GetPath;
 import com.files.LocalFileTree;
@@ -91,11 +92,11 @@ public class FTPClientGUI extends JFrame {
 
         outputScrollPane.setBorder(BorderFactory.createTitledBorder("Output"));
 
-        ImageIcon downloadIcon = new ImageIcon("FTPClientv2/demo/src/main/java/com/assets/download.png");
+        ImageIcon downloadIcon = new ImageIcon("demo/src/main/java/com/assets/download.png");
         downloadIcon = new ImageIcon(downloadIcon.getImage().getScaledInstance(40, -1, java.awt.Image.SCALE_SMOOTH));
         downloadButton.setIcon(downloadIcon);
 
-        ImageIcon uploadIcon = new ImageIcon("FTPClientv2/demo/src/main/java/com/assets/upload.png");
+        ImageIcon uploadIcon = new ImageIcon("demo/src/main/java/com/assets/upload.png");
         uploadIcon = new ImageIcon(uploadIcon.getImage().getScaledInstance(40, -1, java.awt.Image.SCALE_SMOOTH));
         uploadButton.setIcon(uploadIcon);
 
@@ -277,8 +278,6 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
-        // *IMPORTANT* if I want to load the files recursively I need to create an
-        // Expansion Listener
 
         // Adds a Selection Listener to the local tree
         localTree.addTreeSelectionListener(new TreeSelectionListener() {
@@ -368,7 +367,6 @@ public class FTPClientGUI extends JFrame {
             }
         });
 
-        /*****************************************************************/
         // Adds a Selection Listener to the server tree
         serverTree.addTreeSelectionListener(new TreeSelectionListener() {
 
@@ -582,7 +580,7 @@ public class FTPClientGUI extends JFrame {
     }
 
     public static void main(String[] args) throws IOException {
-        // NewDB.createDataBase();
+        NewDB.createDataBase();
         new FTPClientGUI();
     }
 }
