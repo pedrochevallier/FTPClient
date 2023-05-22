@@ -21,7 +21,7 @@ The FTP Client is a Java application that provides functionality for interacting
 
 ## Usage
 
-1. Clone the repository:
+1. Clone the repository.
 
 2. Open the project in your preferred Java IDE.
 
