@@ -13,6 +13,8 @@ The FTP Client is a Java application that provides functionality for interacting
 - **Binary Mode**: Support for transferring files in binary mode
 - **Error Handling**: Handle various error conditions gracefully, providing meaningful error messages to the user.
 
+![ScreenShot](demo/screenshots/main.jpg?raw=true "Main window")
+
 ## Prerequisites
 
 - Java Development Kit (JDK) 8 or later
