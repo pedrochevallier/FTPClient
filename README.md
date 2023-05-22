@@ -23,8 +23,6 @@ The FTP Client is a Java application that provides functionality for interacting
 
 1. Clone the repository:
 
-   ```shell
-   git clone https://github.com/your-username/ftp-client.git
 2. Open the project in your preferred Java IDE.
 
 3. Build the project to compile the Java source code.
